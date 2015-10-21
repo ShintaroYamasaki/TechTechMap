@@ -157,12 +157,14 @@
     // バッテリーレベルのキャラクタリスティックかどうかを判定
 //    if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"2A19"]]) {
     
-        unsigned char byte;
-        
-        // 1バイト取り出す
-        [characteristic.value getBytes:&byte length:1];
-        
-        NSLog(@"Battery Level: %d", byte);
+//        unsigned char byte;
+//        
+//        // 1バイト取り出す
+//        [characteristic.value getBytes:&byte length:1];
+    
+        NSString *str= [[NSString alloc] initWithData:characteristic.value encoding:NSASCIIStringEncoding];
+    
+        NSLog(@"read: %@", str);
 //    }
 }
 
