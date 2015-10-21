@@ -139,8 +139,13 @@
             
             [peripheral readValueForCharacteristic:characteristic];
         }
-        // Read専用のキャラクタリスティックに限定して読み出す場合
-        else if (characteristic.properties == CBCharacteristicPropertyWrite) {
+        // Write専用のキャラクタリスティックに限定して読み込む場合
+//        else if (characteristic.properties == CBCharacteristicPropertyWrite
+//                 || characteristic.properties == CBCharacteristicPropertyWriteWithoutResponse) {
+//            self.outputCharacteristic = characteristic;
+//        }
+        
+        else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"34432C9B-5A4B-42AB-A3EA-A6A5E48975EE"]]) {
             self.outputCharacteristic = characteristic;
         }
 
@@ -178,10 +183,10 @@
             NSLog(@"Outoput not ready!");
             return;
         }
-        NSData *data = [@"world!" dataUsingEncoding:NSASCIIStringEncoding];
+        NSData *data = [@"world" dataUsingEncoding:NSUTF8StringEncoding];
         [self.peripheral writeValue:data
                   forCharacteristic:self.outputCharacteristic
-                               type:CBCharacteristicWriteWithoutResponse];
+                               type:CBCharacteristicWriteWithResponse];
 //    }
 }
 
@@ -196,6 +201,7 @@
     }
     
     NSLog(@"Write成功！");
+    
 }
 
 
