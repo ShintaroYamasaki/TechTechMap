@@ -506,6 +506,7 @@
 				CB56D1AA1BD73EED005B0C43 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		CB56D1AB1BD73EED005B0C43 /* Build configuration list for PBXNativeTarget "TechTechMapTests" */ = {
 			isa = XCConfigurationList;
@@ -514,6 +515,7 @@
 				CB56D1AD1BD73EED005B0C43 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		CB56D1AE1BD73EED005B0C43 /* Build configuration list for PBXNativeTarget "TechTechMapUITests" */ = {
 			isa = XCConfigurationList;
@@ -522,6 +524,7 @@
 				CB56D1B01BD73EED005B0C43 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
