@@ -17,6 +17,7 @@
 }
 @property (nonatomic, strong) CBCentralManager *centralManager;
 @property (nonatomic, strong) CBPeripheral *peripheral;
+@property (nonatomic, strong) CBCharacteristic *outputCharacteristic;
 @end
 
 
@@ -138,6 +139,11 @@
             
             [peripheral readValueForCharacteristic:characteristic];
         }
+        // Read専用のキャラクタリスティックに限定して読み出す場合
+        else if (characteristic.properties == CBCharacteristicPropertyWrite) {
+            self.outputCharacteristic = characteristic;
+        }
+
     }
 }
 
@@ -162,11 +168,38 @@
 //        // 1バイト取り出す
 //        [characteristic.value getBytes:&byte length:1];
     
+        // Read
         NSString *str= [[NSString alloc] initWithData:characteristic.value encoding:NSASCIIStringEncoding];
     
         NSLog(@"read: %@", str);
+    
+        // Read後にWrite
+        if (!(self.outputCharacteristic)) {
+            NSLog(@"Outoput not ready!");
+            return;
+        }
+        NSData *data = [@"world!" dataUsingEncoding:NSASCIIStringEncoding];
+        [self.peripheral writeValue:data
+                  forCharacteristic:self.outputCharacteristic
+                               type:CBCharacteristicWriteWithoutResponse];
 //    }
 }
+
+// データ書き込みが完了すると呼ばれる
+- (void)                peripheral:(CBPeripheral *)peripheral
+    didWriteValueForCharacteristic:(CBCharacteristic *)characteristic
+                             error:(NSError *)error
+{
+    if (error) {
+        NSLog(@"Write失敗...error:%@", error);
+        return;
+    }
+    
+    NSLog(@"Write成功！");
+}
+
+
+
 
 
 // =============================================================================
