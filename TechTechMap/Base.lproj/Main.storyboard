@@ -17,19 +17,40 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="e9f-hJ-CQZ">
-                                <rect key="frame" x="283" y="285" width="35" height="30"/>
+                                <rect key="frame" x="282.5" y="196" width="35" height="30"/>
                                 <animations/>
                                 <state key="normal" title="Scan"/>
                                 <connections>
                                     <action selector="scanBtnTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="BN7-Yk-u34"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4gs-7J-OHR">
+                                <rect key="frame" x="282" y="240" width="35" height="30"/>
+                                <animations/>
+                                <state key="normal" title="Read"/>
+                                <connections>
+                                    <action selector="onRead:" destination="BYZ-38-t0r" eventType="touchUpInside" id="7wP-zf-Vk4"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jVC-nT-K08">
+                                <rect key="frame" x="282" y="307" width="37" height="30"/>
+                                <animations/>
+                                <state key="normal" title="Write"/>
+                                <connections>
+                                    <action selector="onWrite:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Oga-7D-qPk"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="e9f-hJ-CQZ" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="1fC-Tn-M8Y"/>
-                            <constraint firstItem="e9f-hJ-CQZ" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="hko-pA-E7C"/>
+                            <constraint firstItem="e9f-hJ-CQZ" firstAttribute="leading" secondItem="4gs-7J-OHR" secondAttribute="leading" id="C7I-Es-e1B"/>
+                            <constraint firstItem="e9f-hJ-CQZ" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="176" id="KSf-59-lC2"/>
+                            <constraint firstItem="4gs-7J-OHR" firstAttribute="top" secondItem="e9f-hJ-CQZ" secondAttribute="bottom" constant="14" id="UFC-vA-grv"/>
+                            <constraint firstItem="jVC-nT-K08" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="c4X-42-u3e"/>
+                            <constraint firstItem="4gs-7J-OHR" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="cns-ma-ypT"/>
+                            <constraint firstItem="jVC-nT-K08" firstAttribute="top" secondItem="4gs-7J-OHR" secondAttribute="bottom" constant="37" id="esj-SC-iUp"/>
+                            <constraint firstItem="jVC-nT-K08" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="yQx-4R-mva"/>
                         </constraints>
                     </view>
                 </viewController>

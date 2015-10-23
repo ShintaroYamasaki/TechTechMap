@@ -18,6 +18,7 @@
 @property (nonatomic, strong) CBCentralManager *centralManager;
 @property (nonatomic, strong) CBPeripheral *peripheral;
 @property (nonatomic, strong) CBCharacteristic *outputCharacteristic;
+@property (nonatomic, strong) CBCharacteristic *inputCharacteristic;
 @end
 
 
@@ -102,7 +103,7 @@
 
     
     for (CBService *service in services) {
-        if ([service.UUID isEqual:[CBUUID UUIDWithString:@"F1453167-EC82-4DE9-BD9C-1406F3B8A7B4"]]) {
+        if ([service.UUID isEqual:[CBUUID UUIDWithString:@"ADA99A7F-888B-4E9F-8080-07DDC240F3CE"]]) {
             // キャラクタリスティック探索開始
             [peripheral discoverCharacteristics:nil forService:service];
         }
@@ -135,9 +136,10 @@
         //        }
         
         // Read専用のキャラクタリスティックに限定して読み出す場合
-        if (characteristic.properties == CBCharacteristicPropertyRead) {
-            
-            [peripheral readValueForCharacteristic:characteristic];
+        if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"ADA99A7F-888B-4E9F-8081-07DDC240F3CE"]]) {
+            self.peripheral = peripheral;
+            self.inputCharacteristic = characteristic;
+//            [peripheral readValueForCharacteristic:characteristic];
         }
         // Write専用のキャラクタリスティックに限定して読み込む場合
 //        else if (characteristic.properties == CBCharacteristicPropertyWrite
@@ -145,7 +147,7 @@
 //            self.outputCharacteristic = characteristic;
 //        }
         
-        else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"34432C9B-5A4B-42AB-A3EA-A6A5E48975EE"]]) {
+        if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"ADA99A7F-888B-4E9F-8082-07DDC240F3CE"]]) {
             self.outputCharacteristic = characteristic;
         }
 
@@ -178,16 +180,16 @@
     
         NSLog(@"read: %@", str);
     
-        // Read後にWrite
-        if (!(self.outputCharacteristic)) {
-            NSLog(@"Outoput not ready!");
-            return;
-        }
-        NSData *data = [@"world" dataUsingEncoding:NSUTF8StringEncoding];
-        [self.peripheral writeValue:data
-                  forCharacteristic:self.outputCharacteristic
-                               type:CBCharacteristicWriteWithResponse];
-//    }
+//        // Read後にWrite
+//        if (!(self.outputCharacteristic)) {
+//            NSLog(@"Outoput not ready!");
+//            return;
+//        }
+//        NSData *data = [@"world" dataUsingEncoding:NSUTF8StringEncoding];
+//        [self.peripheral writeValue:data
+//                  forCharacteristic:self.outputCharacteristic
+//                               type:CBCharacteristicWriteWithResponse];
+////    }
 }
 
 // データ書き込みが完了すると呼ばれる
@@ -229,6 +231,24 @@
         [sender setTitle:@"START SCAN" forState:UIControlStateNormal];
         isScanning = NO;
     }
+}
+
+- (IBAction)onRead:(id)sender {
+    [self.peripheral readValueForCharacteristic:self.inputCharacteristic];
+}
+
+- (IBAction)onWrite:(id)sender {
+    // Read後にWrite
+    if (!(self.outputCharacteristic)) {
+        NSLog(@"Outoput not ready!");
+        return;
+    }
+    NSData *data = [@"world" dataUsingEncoding:NSUTF8StringEncoding];
+    [self.peripheral writeValue:data
+              forCharacteristic:self.outputCharacteristic
+                           type:CBCharacteristicWriteWithResponse];
+    //    }
+
 }
 
 @end
