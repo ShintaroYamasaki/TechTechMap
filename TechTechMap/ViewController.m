@@ -7,6 +7,9 @@
 //
 
 #import "ViewController.h"
+
+
+
 @import CoreBluetooth;
 
 
@@ -15,11 +18,11 @@
 {
     BOOL isScanning;
     NSString *placeID;
+    
+    NSMutableArray *sentMaps;
 }
 @property (nonatomic, strong) CBCentralManager *centralManager;
 @property (nonatomic, strong) CBPeripheral *peripheral;
-@property (nonatomic, strong) CBCharacteristic *outputCharacteristic;
-@property (nonatomic, strong) CBCharacteristic *inputCharacteristic;
 @property (nonatomic, strong) IBOutlet UILabel *lblLog;
 @property (nonatomic, strong) IBOutlet UILabel *lblID;
 @property (nonatomic, strong) IBOutlet UITextField *txtPlaceID;
@@ -38,12 +41,18 @@
     placeID = @"";
     self.lblLog.text = @"";
     self.lblID.text = @"";
-    self.txtPlaceID.text = @"";
-    
+    sentMaps = [NSMutableArray array];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
+}
+
+/// ログ表示
+- (void) showLog: (NSString *) log {
+    self.lblLog.text = log;
+    NSLog(@"%@", log);
+
 }
 
 #pragma mark - IBAction
@@ -57,53 +66,50 @@
         // スキャン開始
         [self.centralManager scanForPeripheralsWithServices:nil
                                                     options:nil];
-        [sender setTitle:@"STOP SCAN" forState:UIControlStateNormal];
+        
+        [sender setTitle:@"Stop" forState:UIControlStateNormal];
         
         // ログ
-        self.lblLog.text = @"Start Scan";
+        [self showLog:@"Start Scan"];
     }
     else {
         
         // スキャン停止
         [self.centralManager stopScan];
-        [sender setTitle:@"START SCAN" forState:UIControlStateNormal];
+        
+        [sender setTitle:@"Start" forState:UIControlStateNormal];
         isScanning = NO;
         
         // ログ
-        self.lblLog.text = @"Stop Scan";
+        [self showLog:@"Stop Scan"];
     }
 }
 
-// Readボタン
-- (IBAction)onRead:(id)sender {
-    [self read];
-}
-
-// Writeボタン
-- (IBAction)onWrite:(id)sender {
-    [self write];
+// リセット
+- (IBAction)onReset:(id)sender {
+    sentMaps = [NSMutableArray array];
 }
 
 #pragma mark - Read Write
 /// 読み込み
-- (void) read {
-    if (!(self.inputCharacteristic)) {
-        // ログ
-        self.lblLog.text = @"Input not ready";
-        NSLog(@"Input not ready!");
-        return;
-    }
-    
-    // 読み込み
-    [self.peripheral readValueForCharacteristic:self.inputCharacteristic];
-}
+//- (void) read: (CBCharacteristic *) characteristic Peripheral: (CBPeripheral *) peripheral{
+//    if (!(characteristic)) {
+//        // ログ
+//        [self showLog:@"Input not ready"];
+//        
+//        return;
+//    }
+//    
+//    // 読み込み
+//    [peripheral readValueForCharacteristic:characteristic];
+//}
 
 /// 書き込み
-- (void) write {
-    if (!(self.outputCharacteristic)) {
+- (void) write: (CBCharacteristic *) characteristic Peripheral: (CBPeripheral *) peripheral {
+    if (!(characteristic)) {
         // ログ
-        self.lblLog.text = @"Output not ready";
-        NSLog(@"Outoput not ready!");
+        [self showLog:@"Outoput not ready!"];
+        
         return;
     }
     
@@ -112,15 +118,12 @@
     NSData *data = [self.txtPlaceID.text dataUsingEncoding:NSASCIIStringEncoding];
     
     // 書き込み
-    [self.peripheral writeValue:data
-              forCharacteristic:self.outputCharacteristic
+    [peripheral writeValue:data
+              forCharacteristic:characteristic
                            type:CBCharacteristicWriteWithResponse];
-
-    
 }
 
 #pragma mark - CBCentralManagerDelegate
-
 // セントラルマネージャの状態が変化すると呼ばれる
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
     
@@ -129,42 +132,39 @@
 }
 
 // ペリフェラルを発見すると呼ばれる
-- (void)   centralManager:(CBCentralManager *)central
-    didDiscoverPeripheral:(CBPeripheral *)peripheral
-        advertisementData:(NSDictionary *)advertisementData
-                     RSSI:(NSNumber *)RSSI
-{
+- (void) centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
     NSLog(@"発見したBLEデバイス：%@", peripheral);
     NSLog(@"%d", RSSI.intValue);
     
     // NameがIMBLE0083で近距離なら接続
-    if ([peripheral.name hasPrefix:@"IMBLE"] && RSSI.intValue >= -70) {
-    
+//    if ([peripheral.name hasPrefix:@"IMBLE"] && RSSI.intValue >= -70) {
+        // すでにコマンドを送ったMapであれば、接続しない
+        for (NSString *mapid in sentMaps) {
+            if ([mapid isEqual:peripheral.identifier.UUIDString]) {
+                return;
+            }
+        }
         self.peripheral = peripheral;
-        
+    
+        // Map ID
+        self.lblID.text = peripheral.identifier.UUIDString;
+    
+//        [self.centralManager stopScan];
+    
         // 接続開始
         [self.centralManager connectPeripheral:peripheral
                                        options:nil];
+    
         // ログ
-        NSString *log =  @"Start Connect";
-        NSLog(@"%@", log);
-        self.lblLog.text = log;
-        
-        // Map ID
-        self.lblID.text = peripheral.identifier.UUIDString;
-    } else {
-        
-    }
+        [self showLog:@"Start Connect"];
+
+//    }
 }
 
-// 接続成功すると呼ばれる
-- (void)  centralManager:(CBCentralManager *)central
-    didConnectPeripheral:(CBPeripheral *)peripheral
-{
+/// 接続成功すると呼ばれる
+- (void) centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     // ログ
-    NSString *log = @"Success Connect";
-    NSLog(@"%@", log);
-    self.lblLog.text = log;
+    [self showLog:@"Success Connect"];
     
     peripheral.delegate = self;
     
@@ -172,15 +172,21 @@
     [peripheral discoverServices:nil];
 }
 
+/// 切断成功するとよばれる
+- (void) centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
+    // スキャン開始
+//    [self.centralManager scanForPeripheralsWithServices:nil
+//                                                options:nil];
+    
+    [self showLog:@"Disconnect"];
+}
+
 // 接続失敗すると呼ばれる
-- (void)        centralManager:(CBCentralManager *)central
-    didFailToConnectPeripheral:(CBPeripheral *)peripheral
-                         error:(NSError *)error
-{
+- (void) centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
+
     // ログ
-    NSString *log = @"Fault Connect";
-    NSLog(@"%@", log);
-    self.lblLog.text = log;
+    [self showLog:@"Fault Connect"];
+
 }
 
 #pragma mark - CBPeripheralDelegate
@@ -199,11 +205,9 @@
 
     
     for (CBService *service in services) {
-        if ([service.UUID isEqual:[CBUUID UUIDWithString:@"ADA99A7F-888B-4E9F-8080-07DDC240F3CE"]]) {
+        if ([service.UUID isEqual:[CBUUID UUIDWithString:kServiceUUID]]) {
             // ログ
-            NSString *log = @"Search Characteristics";
-            NSLog(@"%@", log);
-            self.lblLog.text = log;
+            [self showLog:@"Search Characteristics"];
             
             // キャラクタリスティック探索開始
             [peripheral discoverCharacteristics:nil forService:service];
@@ -227,70 +231,61 @@
     
     for (CBCharacteristic *characteristic in characteristics) {
         
-        // Read専用のキャラクタリスティック
-        if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"ADA99A7F-888B-4E9F-8081-07DDC240F3CE"]]) {
-            self.peripheral = peripheral;
-            self.inputCharacteristic = characteristic;
-//            [peripheral readValueForCharacteristic:characteristic];
-        }
         // Write専用のキャラクタリスティック
-        else if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:@"ADA99A7F-888B-4E9F-8082-07DDC240F3CE"]]) {
-            self.outputCharacteristic = characteristic;
-            
+        if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:kWriteUUID]]) {
             // ログ
-            NSString *log = @"Start Write";
-            NSLog(@"%@", log);
-            self.lblLog.text = log;
+            [self showLog:@"Start Write"];
             
-            [self write];
+            [self write:characteristic Peripheral:peripheral];
         }
 
     }
 }
 
 // データ読み出しが完了すると呼ばれる
-- (void)                 peripheral:(CBPeripheral *)peripheral
-    didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic
-                              error:(NSError *)error
-{
-    if (error) {
-        NSLog(@"読み出し失敗...error:%@, characteristic uuid:%@", error, characteristic.UUID);
-        return;
-    }
-    
-    NSLog(@"読み出し成功！service uuid:%@, characteristice uuid:%@, value%@",
-          characteristic.service.UUID, characteristic.UUID, characteristic.value);
-    
-        // Read
-        NSString *str= [[NSString alloc] initWithData:characteristic.value encoding:NSASCIIStringEncoding];
-    
-        NSLog(@"read: %@", str);
-}
+//- (void) peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
+//    if (error) {
+//        NSLog(@"読み出し失敗...error:%@, characteristic uuid:%@", error, characteristic.UUID);
+//        return;
+//    }
+//    
+//    NSLog(@"読み出し成功！service uuid:%@, characteristice uuid:%@, value%@",
+//          characteristic.service.UUID, characteristic.UUID, characteristic.value);
+//    
+//        // Read
+//        NSString *str= [[NSString alloc] initWithData:characteristic.value encoding:NSASCIIStringEncoding];
+//    
+//        NSLog(@"read: %@", str);
+//}
 
 // データ書き込みが完了すると呼ばれる
-- (void)                peripheral:(CBPeripheral *)peripheral
-    didWriteValueForCharacteristic:(CBCharacteristic *)characteristic
-                             error:(NSError *)error
-{
+- (void) peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
     if (error) {
         NSLog(@"Write失敗...error:%@", error);
         return;
     }
     
     // ログ
-    NSString *log = @"Success Write";
-    NSLog(@"%@", log);
-    self.lblLog.text = log;
+    [self showLog:@"Success Write"];
+    
+    [self.centralManager scanForPeripheralsWithServices:nil
+                                                     options:nil];
     
     // 接続切断
-    log = @"Disconnect";
-    NSLog(@"%@", log);
-    self.lblLog.text = log;
     [self.centralManager cancelPeripheralConnection:peripheral];
+    
     
     // TODO: DBへ書き込み
     // UUID, place_id
     
+    
+    // 送信済みArrayに追加
+    [sentMaps addObject:peripheral.identifier.UUIDString];
+    
+    // スキャン開始
+    [self.centralManager scanForPeripheralsWithServices:nil
+                                                options:nil];
+
 }
 
 
