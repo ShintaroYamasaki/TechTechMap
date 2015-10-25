@@ -17,7 +17,6 @@
 <CBCentralManagerDelegate, CBPeripheralDelegate>
 {
     BOOL isScanning;
-    NSString *placeID;
     
     NSMutableArray *sentMaps;
 }
@@ -25,7 +24,7 @@
 @property (nonatomic, strong) CBPeripheral *peripheral;
 @property (nonatomic, strong) IBOutlet UILabel *lblLog;
 @property (nonatomic, strong) IBOutlet UILabel *lblID;
-@property (nonatomic, strong) IBOutlet UITextField *txtPlaceID;
+@property (nonatomic, strong) IBOutlet UITextField *txtLocation;
 @end
 
 
@@ -38,9 +37,9 @@
     self.centralManager = [[CBCentralManager alloc] initWithDelegate:self
                                                                queue:nil];
     
-    placeID = @"";
     self.lblLog.text = @"";
     self.lblID.text = @"";
+    self.txtLocation.text = @"0";
     sentMaps = [NSMutableArray array];
 }
 
@@ -113,15 +112,55 @@
         return;
     }
     
-    NSLog(@"%@", self.txtPlaceID.text);
+    NSLog(@"%@", self.txtLocation.text);
     
-    NSData *data = [self.txtPlaceID.text dataUsingEncoding:NSASCIIStringEncoding];
+    NSData *data = [self.txtLocation.text dataUsingEncoding:NSASCIIStringEncoding];
     
     // 書き込み
     [peripheral writeValue:data
               forCharacteristic:characteristic
                            type:CBCharacteristicWriteWithResponse];
 }
+
+#pragma mark - POST
+// サーバーへポストする
+- (void) sendIDs: (NSString *) UUID Location: (NSString *) loc {
+    // 送信したいURLを作成する
+    NSURL *url = [NSURL URLWithString:@"http://52.68.204.205:3000/beacons"];
+    // Mutableなインスタンスを作成し、インスタンスの内容を変更できるようにする
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+    // MethodにPOSTを指定する。
+    request.HTTPMethod = @"POST";
+    
+    // 送付したい内容を、key1=value1&key2=value2・・・という形の
+    // 文字列として作成する
+    NSString *body = [NSString stringWithFormat:@"device=%@&location=%@", UUID, loc];
+    
+    // HTTPBodyには、NSData型で設定する
+    request.HTTPBody = [body dataUsingEncoding:NSUTF8StringEncoding];
+    
+    
+    //同期通信で送信
+    NSURLResponse *response = nil;
+    NSError *error = nil;
+    NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
+    
+    if (error != nil) {
+        NSLog(@"Error!%@", error);
+        return;
+    }
+    
+    NSError *e = nil;
+    
+    //取得したレスポンスをJSONパース
+    NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:nil error:&e];
+    
+    NSLog(@"%@", dict);
+//    NSString *token = [dict objectForKey:@"token"];
+//    NSLog(@"Token is %@", token);
+}
+
+
 
 #pragma mark - CBCentralManagerDelegate
 // セントラルマネージャの状態が変化すると呼ばれる
@@ -277,6 +316,10 @@
     
     // TODO: DBへ書き込み
     // UUID, place_id
+    NSString *UUID = peripheral.identifier.UUIDString;
+    NSString *loc = self.txtLocation.text;
+    
+    [self sendIDs: UUID Location: loc];
     
     
     // 送信済みArrayに追加
