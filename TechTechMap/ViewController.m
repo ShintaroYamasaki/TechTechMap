@@ -17,7 +17,7 @@
 <CBCentralManagerDelegate, CBPeripheralDelegate>
 {
     BOOL isScanning;
-    
+    NSArray *serviceUUIDs;
     NSMutableArray *sentMaps;
 }
 @property (nonatomic, strong) CBCentralManager *centralManager;
@@ -41,6 +41,11 @@
     self.lblID.text = @"";
     self.txtLocation.text = @"0";
     sentMaps = [NSMutableArray array];
+    
+    serviceUUIDs = @[
+                              [CBUUID UUIDWithString:kServiceUUID]
+                              ];
+
 }
 
 - (void)didReceiveMemoryWarning {
@@ -51,7 +56,21 @@
 - (void) showLog: (NSString *) log {
     self.lblLog.text = log;
     NSLog(@"%@", log);
+    
+    [self publishLocalNotificationWithMessage:log];
+}
 
+// ローカル通知を発行する（バックグラウンドのみ）
+- (void)publishLocalNotificationWithMessage:(NSString *)message {
+    
+    if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive) {
+        
+        UILocalNotification *localNotification = [UILocalNotification new];
+        localNotification.alertBody = message;
+        localNotification.fireDate = [NSDate date];
+        localNotification.soundName = UILocalNotificationDefaultSoundName;
+        [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
+    }
 }
 
 #pragma mark - IBAction
@@ -63,7 +82,7 @@
         isScanning = YES;
         
         // スキャン開始
-        [self.centralManager scanForPeripheralsWithServices:nil
+        [self.centralManager scanForPeripheralsWithServices:serviceUUIDs
                                                     options:nil];
         
         [sender setTitle:@"Stop" forState:UIControlStateNormal];
@@ -185,9 +204,6 @@
         }
         self.peripheral = peripheral;
     
-        // Map ID
-        self.lblID.text = peripheral.identifier.UUIDString;
-    
 //        [self.centralManager stopScan];
     
         // 接続開始
@@ -205,6 +221,8 @@
     // ログ
     [self showLog:@"Success Connect"];
     
+    self.lblID.text = peripheral.identifier.UUIDString;
+    
     peripheral.delegate = self;
     
     // サービス探索開始
@@ -218,6 +236,8 @@
 //                                                options:nil];
     
     [self showLog:@"Disconnect"];
+    
+    self.lblID.text = @"";
 }
 
 // 接続失敗すると呼ばれる
@@ -307,9 +327,6 @@
     // ログ
     [self showLog:@"Success Write"];
     
-    [self.centralManager scanForPeripheralsWithServices:nil
-                                                     options:nil];
-    
     // 接続切断
     [self.centralManager cancelPeripheralConnection:peripheral];
     
@@ -326,7 +343,7 @@
     [sentMaps addObject:peripheral.identifier.UUIDString];
     
     // スキャン開始
-    [self.centralManager scanForPeripheralsWithServices:nil
+    [self.centralManager scanForPeripheralsWithServices:serviceUUIDs
                                                 options:nil];
 
 }
