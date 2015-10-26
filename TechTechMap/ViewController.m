@@ -42,9 +42,7 @@
     self.txtLocation.text = @"0";
     sentMaps = [NSMutableArray array];
     
-    serviceUUIDs = @[
-                              [CBUUID UUIDWithString:kServiceUUID]
-                              ];
+    serviceUUIDs = @[[CBUUID UUIDWithString:kServiceUUID]];
 
 }
 

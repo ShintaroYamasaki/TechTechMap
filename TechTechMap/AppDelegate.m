@@ -31,11 +31,6 @@
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
-    UILocalNotification *localNotification = [UILocalNotification new];
-    localNotification.alertBody = @"applicationDidEnterBackground";
-    localNotification.fireDate = [NSDate date];
-    localNotification.soundName = UILocalNotificationDefaultSoundName;
-    [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
