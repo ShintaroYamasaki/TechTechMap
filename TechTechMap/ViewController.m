@@ -42,7 +42,7 @@
     self.txtLocation.text = @"0";
     sentMaps = [NSMutableArray array];
     
-    serviceUUIDs = @[[CBUUID UUIDWithString:kServiceUUID]];
+    serviceUUIDs = [NSArray arrayWithObjects:[CBUUID UUIDWithString:kServiceUUID], nil];
 
 }
 
@@ -80,8 +80,8 @@
         isScanning = YES;
         
         // スキャン開始
-        [self.centralManager scanForPeripheralsWithServices:serviceUUIDs
-                                                    options:nil];
+//        [self.centralManager scanForPeripheralsWithServices:serviceUUIDs options:nil];
+        [self.centralManager scanForPeripheralsWithServices:nil options:nil];
         
         [sender setTitle:@"Stop" forState:UIControlStateNormal];
         
@@ -193,7 +193,7 @@
     NSLog(@"%d", RSSI.intValue);
     
     // NameがIMBLE0083で近距離なら接続
-//    if ([peripheral.name hasPrefix:@"IMBLE"] && RSSI.intValue >= -70) {
+//    if ([peripheral.name hasPrefix:@"IMBLE"] && RSSI.intValue >= -50) {
         // すでにコマンドを送ったMapであれば、接続しない
         for (NSString *mapid in sentMaps) {
             if ([mapid isEqual:peripheral.identifier.UUIDString]) {
