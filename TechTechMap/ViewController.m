@@ -199,10 +199,18 @@
 
 /// 切断成功するとよばれる
 - (void) centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
+    [self showLog:@"Disconnect"];
+    
+    if (error) {
+        NSLog(@"%@", error);
+        
+        [self.centralManager connectPeripheral:peripheral options:nil];
+        
+        return;
+    }
+    
     // 解放
     [self.peripherals removeObject:peripheral];
-    
-    [self showLog:@"Disconnect"];
     
     self.lblID.text = @"";
 }
@@ -291,8 +299,10 @@
     
     // もう一度読み込む
     if (RSSI.intValue < -40) {
-        sleep(3);
-        [peripheral readRSSI];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            sleep(1);
+            [peripheral readRSSI];
+        });
         
         return;
     }

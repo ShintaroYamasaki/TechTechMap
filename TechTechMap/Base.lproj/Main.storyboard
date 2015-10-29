@@ -36,9 +36,6 @@
                                     <constraint firstAttribute="width" constant="39" id="YkB-DV-wXK"/>
                                 </constraints>
                                 <state key="normal" title="Reset"/>
-                                <connections>
-                                    <action selector="onReset:" destination="BYZ-38-t0r" eventType="touchUpInside" id="0Yh-Aa-ATs"/>
-                                </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Log" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gjd-2r-ZkX">
                                 <rect key="frame" x="13" y="171" width="560" height="21"/>
