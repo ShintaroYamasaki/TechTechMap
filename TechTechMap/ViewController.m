@@ -86,6 +86,8 @@
         
         [sender setTitle:@"Stop" forState:UIControlStateNormal];
         
+        [self.tblPeripheral reloadData];
+        
         // ログ
         [self showLog:@"Start Scan"];
     }
@@ -96,6 +98,9 @@
         
         [sender setTitle:@"Start" forState:UIControlStateNormal];
         isScanning = NO;
+        
+        [self.peripherals removeAllObjects];
+        self.peripherals = [NSMutableArray array];
         
         // ログ
         [self showLog:@"Stop Scan"];
@@ -304,7 +309,7 @@
     NSLog(@"RSSI %d %@", RSSI.intValue, peripheral.identifier.UUIDString);
     
     // もう一度読み込む
-    if (RSSI.intValue < -40) {
+    if (RSSI.intValue < -60) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
             sleep(1);
             [peripheral readRSSI];
