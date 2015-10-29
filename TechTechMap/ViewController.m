@@ -18,6 +18,7 @@
 {
     BOOL isScanning;
     NSArray *serviceUUIDs;
+    NSUserDefaults *userDefault;
 }
 @property (nonatomic, strong) CBCentralManager *centralManager;
 @property (nonatomic, strong) NSMutableArray *peripherals;
@@ -36,14 +37,24 @@
     self.centralManager = [[CBCentralManager alloc] initWithDelegate:self
                                                                queue:nil];
     
+    // ユーザーデフォルト
+    userDefault = [NSUserDefaults standardUserDefaults];
+    if ([[userDefault stringForKey:@"LOCATION"] isEqual:@""]) {
+        self.txtLocation.text = @"0";
+    } else {
+        self.txtLocation.text = [userDefault stringForKey:@"LOCATION"];
+    }
+    
     self.lblLog.text = @"";
-    self.txtLocation.text = @"0";
+    
     self.peripherals = [NSMutableArray array];
     serviceUUIDs = [NSArray arrayWithObjects:[CBUUID UUIDWithString:kServiceUUID], nil];
     
     // テーブル
     self.tblPeripheral.delegate = self;
     self.tblPeripheral.dataSource = self;
+    
+    
 
 }
 
@@ -79,6 +90,10 @@
     if (!isScanning) {
         
         isScanning = YES;
+        
+        // ユーザーデフォルト
+        [userDefault setObject:self.txtLocation.text forKey:@"LOCATION"];
+        [userDefault synchronize];
         
         // スキャン開始
 //        [self.centralManager scanForPeripheralsWithServices:serviceUUIDs options:nil];
