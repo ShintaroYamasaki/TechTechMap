@@ -14,7 +14,7 @@
 
 
 @interface ViewController ()
-<CBCentralManagerDelegate, CBPeripheralDelegate>
+<CBCentralManagerDelegate, CBPeripheralDelegate, UITableViewDataSource, UITableViewDelegate>
 {
     BOOL isScanning;
     NSArray *serviceUUIDs;
@@ -22,8 +22,8 @@
 @property (nonatomic, strong) CBCentralManager *centralManager;
 @property (nonatomic, strong) NSMutableArray *peripherals;
 @property (nonatomic, strong) IBOutlet UILabel *lblLog;
-@property (nonatomic, strong) IBOutlet UILabel *lblID;
 @property (nonatomic, strong) IBOutlet UITextField *txtLocation;
+@property (nonatomic) IBOutlet UITableView *tblPeripheral;
 @end
 
 
@@ -37,10 +37,13 @@
                                                                queue:nil];
     
     self.lblLog.text = @"";
-    self.lblID.text = @"";
     self.txtLocation.text = @"0";
     self.peripherals = [NSMutableArray array];
     serviceUUIDs = [NSArray arrayWithObjects:[CBUUID UUIDWithString:kServiceUUID], nil];
+    
+    // テーブル
+    self.tblPeripheral.delegate = self;
+    self.tblPeripheral.dataSource = self;
 
 }
 
@@ -190,7 +193,8 @@
     // ログ
     [self showLog:@"Success Connect"];
     
-    self.lblID.text = peripheral.identifier.UUIDString;
+    // テーブル更新
+    [self.tblPeripheral reloadData];
     
     peripheral.delegate = self;
     
@@ -212,7 +216,9 @@
     // 解放
     [self.peripherals removeObject:peripheral];
     
-    self.lblID.text = @"";
+    // テーブル更新
+    [self.tblPeripheral reloadData];
+    
 }
 
 // 接続失敗すると呼ばれる
@@ -310,6 +316,66 @@
     // サービス探索開始
     [peripheral discoverServices:nil];
 }
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    NSInteger dataCount;
+    
+    // テーブルに表示するデータ件数を返す
+    switch (section) {
+        case 0:
+            dataCount = self.peripherals.count;
+            break;
+        default:
+            break;
+    }
+    return dataCount;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString *CellIdentifier = @"Cell";
+    // 再利用できるセルがあれば再利用する
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    
+    if (!cell) {
+        // 再利用できない場合は新規で作成
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                      reuseIdentifier:CellIdentifier];
+    }
+    
+    CBPeripheral *peripheral = [self.peripherals objectAtIndex:indexPath.row];
+    NSString *UUID = peripheral.identifier.UUIDString;
+    
+    // ステータスで色を変える
+    switch (peripheral.state) {
+        case CBPeripheralStateConnected:
+            cell.textLabel.textColor = [UIColor blueColor];
+            break;
+        case CBPeripheralStateDisconnected:
+            cell.textLabel.textColor = [UIColor redColor];
+            break;
+        default:
+            cell.textLabel.textColor = [UIColor blackColor];
+            break;
+    }
+    
+    cell.textLabel.font = [UIFont fontWithName:@"AppleGothic" size:10];
+    
+    switch (indexPath.section) {
+        case 0:
+            cell.textLabel.text = UUID;
+            break;
+        default:
+            break;
+    }
+    
+    return cell;
+}
+
 
 
 @end
