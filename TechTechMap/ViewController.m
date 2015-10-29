@@ -198,8 +198,10 @@
     // NameがIMBLE0083なら接続
 //    if (![peripheral.name hasPrefix:@"IMBLE"]) return;
     
-    [self.peripherals addObject: peripheral];
-
+    if (peripheral.state == CBPeripheralStateDisconnected) {
+        [self.peripherals addObject: peripheral];
+    }
+    
     // 接続開始
     [self.centralManager connectPeripheral:peripheral
                                    options:nil];
