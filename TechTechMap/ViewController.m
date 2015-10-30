@@ -53,9 +53,7 @@
     // テーブル
     self.tblPeripheral.delegate = self;
     self.tblPeripheral.dataSource = self;
-    
-    
-
+  
 }
 
 - (void)didReceiveMemoryWarning {
@@ -132,14 +130,35 @@
         return;
     }
     
-    NSLog(@"%@", self.txtLocation.text);
     
-    NSData *data = [self.txtLocation.text dataUsingEncoding:NSASCIIStringEncoding];
+    // 先頭に長さ情報を付加
+    NSData *txt = [self.txtLocation.text dataUsingEncoding:NSASCIIStringEncoding];
+    
+    const unsigned char *ptr = [txt bytes];
+    unsigned char value[512];
+    value[0] = 0x05;
+    value[1] = 0x00;
+    value[2] = 0x00;
+    value[3] = 0x00;
+    
+    int dataLength = [txt length];
+    for(int i = 4; i - 4 < dataLength; i++) {
+        unsigned char c = *ptr++;
+        value[i] = c;
+        NSLog(@"char=%c hex=%x", c, c);
+    }
+    NSLog(@"%s", value);
+    
+    NSData *data = [[NSData alloc] initWithBytes:&value length:dataLength + 4];
+
     
     // 書き込み
     [peripheral writeValue:data
               forCharacteristic:characteristic
                            type:CBCharacteristicWriteWithResponse];
+    
+    NSLog(@"%@", self.txtLocation.text);
+
 }
 
 #pragma mark - POST
@@ -326,9 +345,9 @@
     NSLog(@"RSSI %d %@", RSSI.intValue, peripheral.identifier.UUIDString);
     
     // もう一度読み込む
-    if (RSSI.intValue < -60) {
+    if (RSSI.intValue < -70) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-            sleep(1);
+            sleep(0.4);
             [peripheral readRSSI];
         });
         
