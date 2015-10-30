@@ -215,7 +215,7 @@
     NSLog(@"%d", RSSI.intValue);
     
     // NameがIMBLE0083なら接続
-//    if (![peripheral.name hasPrefix:@"IMBLE"]) return;
+    if (![peripheral.name hasPrefix:@"IMBLE"]) return;
     
     if (peripheral.state == CBPeripheralStateDisconnected) {
         [self.peripherals addObject: peripheral];
