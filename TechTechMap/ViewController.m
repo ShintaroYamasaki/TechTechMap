@@ -31,6 +31,8 @@
 @property (nonatomic, strong) IBOutlet UILabel *lblRSSI;
 @property (nonatomic, strong) IBOutlet UISlider *sldRSSI;
 @property (nonatomic) IBOutlet UITableView *tblPeripheral;
+@property (nonatomic) IBOutlet UIStepper *stpPInterval;
+@property (nonatomic) IBOutlet UILabel *lblPInterval;
 @end
 
 
@@ -55,6 +57,9 @@
     
     self.peripherals = [NSMutableArray array];
     serviceUUIDs = [NSArray arrayWithObjects:[CBUUID UUIDWithString:kServiceUUID], nil];
+    
+    self.lblPInterval.text = [NSString stringWithFormat:@"%d", (int)self.stpPInterval.value];
+
     
     dictSubText = [NSMutableDictionary dictionary];
     dictWriteWord = [NSMutableDictionary dictionary];
@@ -125,7 +130,7 @@
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
             while (isScanning) {
                 [self getParsonalityInfo];
-                sleep(30);
+                sleep(self.stpPInterval.value);
             }
         });
 
@@ -147,7 +152,14 @@
         
         // ログ
         [self showLog:@"Stop Scan"];
+        
+        [self.tblPeripheral reloadData];
     }
+}
+
+// パーソナリティ情報取得インターバル
+- (IBAction)changeStepper:(id)sender {
+    self.lblPInterval.text = [NSString stringWithFormat:@"%d", (int)self.stpPInterval.value];
 }
 
 #pragma mark - UISlider
@@ -209,6 +221,9 @@
     
     // 送付したい内容を、key1=value1&key2=value2・・・という形の
     // 文字列として作成する
+    if ([loc hasPrefix:@"l"]) {
+        loc = [loc stringByReplacingOccurrencesOfString:@"l" withString:@""];
+    }
     NSString *body = [NSString stringWithFormat:@"device=%@&location=%@", UUID, loc];
     
     // HTTPBodyには、NSData型で設定する
@@ -263,7 +278,7 @@
     NSLog(@"%@", aryjson);
     
     // 接続中のペリフェラルに書き込み
-    NSDictionary *p_dict = [aryjson objectAtIndex:0];
+    NSDictionary *p_dict = [aryjson lastObject];
     NSString *p_loc = [p_dict objectForKey:@"location"];
     for (CBPeripheral *peripheral in self.peripherals) {
         if (peripheral.state == CBPeripheralStateConnected) {
