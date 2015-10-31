@@ -77,11 +77,19 @@
     }
     [self.sldRSSI addTarget:self action:@selector(changeSlider:) forControlEvents:UIControlEventValueChanged];
     [self showSliderValue];
-  
+    
+    // 背景をキリックしたら、キーボードを隠す
+    UITapGestureRecognizer *gestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(closeSoftKeyboard)];
+    [self.view addGestureRecognizer:gestureRecognizer];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
+}
+
+// キーボードを隠す処理
+- (void)closeSoftKeyboard {
+    [self.view endEditing: YES];
 }
 
 /// ログ表示
@@ -435,10 +443,10 @@
         [self.centralManager cancelPeripheralConnection:peripheral];
         
         // DBへ書き込み
-        // UUID, loc
-        NSString *UUID = peripheral.identifier.UUIDString;
+        // name, loc
+        NSString *name = peripheral.name;
         NSString *loc = self.txtLocation.text;
-        [self postIDs: UUID Location: loc];
+        [self postIDs: name Location: loc];
     }
     
     
@@ -465,10 +473,11 @@
     // ログ
     [self showLog:@"Start Write"];
     
-    // 書き込み
-    [self write:peripheral];
+    
     // 書き込みワード指定
     [dictWriteWord setObject:self.txtLocation.text forKey:peripheral.identifier.UUIDString];
+    // 書き込み
+    [self write:peripheral];
 }
 
 #pragma mark - UITableViewDataSource
@@ -533,6 +542,19 @@
     }
     
     return cell;
+}
+
+#pragma mark - UITableViewDelegate
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES]; // 選択状態の解除をします。
+    
+    CBPeripheral *peripheral = [self.peripherals objectAtIndex:indexPath.row];
+    
+    // 書き込みワード指定
+    [dictWriteWord setObject:self.txtLocation.text forKey:peripheral.identifier.UUIDString];
+    // 書き込み
+    [self write:peripheral];
+
 }
 
 
