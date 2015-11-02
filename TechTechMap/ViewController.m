@@ -29,10 +29,12 @@
 @property (nonatomic, strong) IBOutlet UILabel *lblLog;
 @property (nonatomic, strong) IBOutlet UITextField *txtLocation;
 @property (nonatomic, strong) IBOutlet UILabel *lblRSSI;
-@property (nonatomic, strong) IBOutlet UISlider *sldRSSI;
+@property (nonatomic, strong) IBOutlet UIStepper *stpRSSI;
 @property (nonatomic) IBOutlet UITableView *tblPeripheral;
 @property (nonatomic) IBOutlet UIStepper *stpPInterval;
 @property (nonatomic) IBOutlet UILabel *lblPInterval;
+@property (nonatomic) IBOutlet UISwitch *swcConnectServer;
+@property (nonatomic) IBOutlet UISwitch *swcPersonalityLog;
 @end
 
 
@@ -69,14 +71,17 @@
     self.tblPeripheral.delegate = self;
     self.tblPeripheral.dataSource = self;
     
-    // RSSIスライダー
-    if ([userDefault integerForKey:@"RSSI"] == 0) {
-        self.sldRSSI.value = 70;
-    } else {
-        self.sldRSSI.value = [userDefault integerForKey:@"RSSI"];
+    // RSSI初期値
+    if ([userDefault integerForKey:@"RSSI"] != 0) {
+        self.stpRSSI.value = [userDefault integerForKey:@"RSSI"];
     }
-    [self.sldRSSI addTarget:self action:@selector(changeSlider:) forControlEvents:UIControlEventValueChanged];
-    [self showSliderValue];
+    self.lblRSSI.text = [NSString stringWithFormat:@"%d", (int)self.stpRSSI.value];
+    
+    // パーソナリティログインターバル初期値
+    if ([userDefault integerForKey:@"PINTERVAL"] != 0) {
+        self.stpPInterval.value = [userDefault integerForKey:@"PINTERVAL"];
+    }
+    self.lblPInterval.text = [NSString stringWithFormat:@"%d", (int)self.stpPInterval.value];
     
     // 背景をキリックしたら、キーボードを隠す
     UITapGestureRecognizer *gestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(closeSoftKeyboard)];
@@ -123,6 +128,8 @@
         
         // ユーザーデフォルト
         [userDefault setObject:self.txtLocation.text forKey:@"LOCATION"];
+        [userDefault setInteger:self.stpRSSI.value forKey:@"RSSI"];
+        [userDefault setInteger:self.stpPInterval.value forKey:@"PINTERVAL"];
         [userDefault synchronize];
         
         // スキャン開始
@@ -135,13 +142,14 @@
         
         
         // パーソナリティ情報取得
-//        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-//            while (isScanning) {
-//                [self getParsonalityInfo];
-//                sleep(self.stpPInterval.value);
-//            }
-//        });
-
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            while (isScanning) {
+                if (self.swcPersonalityLog.isOn) {
+                    [self getParsonalityInfo];
+                    sleep(self.stpPInterval.value);
+                }
+            }
+        });
         
         
         // ログ
@@ -166,23 +174,13 @@
 }
 
 // パーソナリティ情報取得インターバル
-- (IBAction)changeStepper:(id)sender {
+- (IBAction)changePersonalityInterval:(id)sender {
     self.lblPInterval.text = [NSString stringWithFormat:@"%d", (int)self.stpPInterval.value];
 }
 
-#pragma mark - UISlider
-// 値変更
-- (void) changeSlider: (UISlider*)slider {
-    [userDefault setInteger:slider.value forKey:@"RSSI"];
-    
-    [self showSliderValue];
+- (IBAction)changeRSSILimit:(id)sender {
+    self.lblRSSI.text = [NSString stringWithFormat:@"%d", (int)self.stpRSSI.value];
 }
-
-// ラベル表示
-- (void) showSliderValue {
-    self.lblRSSI.text = [NSString stringWithFormat:@"%f", self.sldRSSI.value];
-}
-
 
 #pragma mark - Write
 /// 書き込み
@@ -443,10 +441,12 @@
         [self.centralManager cancelPeripheralConnection:peripheral];
         
         // DBへ書き込み
-        // name, loc
-        NSString *name = peripheral.name;
-        NSString *loc = self.txtLocation.text;
-//        [self postIDs: name Location: loc];
+        if (self.swcConnectServer.isOn) {
+            // name, loc
+            NSString *name = peripheral.name;
+            NSString *loc = self.txtLocation.text;
+            [self postIDs: name Location: loc];
+        }
     }
     
     
@@ -461,7 +461,7 @@
     [self.tblPeripheral reloadData];
     
     // もう一度読み込む
-    if (RSSI.intValue < -self.sldRSSI.value) {
+    if (RSSI.intValue < self.stpRSSI.value) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
             sleep(0.4);
             [peripheral readRSSI];
@@ -517,11 +517,13 @@
     
     // ステータスで色を変える
     switch (peripheral.state) {
+        // 接続
         case CBPeripheralStateConnected:
         case CBPeripheralStateConnecting:
             
             cell.textLabel.textColor = [UIColor blueColor];
             break;
+        // 切断
         case CBPeripheralStateDisconnected:
         case CBPeripheralStateDisconnecting:
             cell.textLabel.textColor = [UIColor redColor];
