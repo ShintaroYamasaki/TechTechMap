@@ -135,12 +135,12 @@
         
         
         // パーソナリティ情報取得
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-            while (isScanning) {
-                [self getParsonalityInfo];
-                sleep(self.stpPInterval.value);
-            }
-        });
+//        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+//            while (isScanning) {
+//                [self getParsonalityInfo];
+//                sleep(self.stpPInterval.value);
+//            }
+//        });
 
         
         
@@ -446,7 +446,7 @@
         // name, loc
         NSString *name = peripheral.name;
         NSString *loc = self.txtLocation.text;
-        [self postIDs: name Location: loc];
+//        [self postIDs: name Location: loc];
     }
     
     
